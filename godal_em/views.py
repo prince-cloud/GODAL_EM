@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from accounts.forms import CustomUserChangeForm
 from .models import Meter, Request
 from django.contrib import messages
@@ -6,7 +6,9 @@ from django.contrib.auth.decorators import login_required
 from .forms import RequestForm
 # Create your views here.
 from random import randint
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 def uniqueId(n):
     range_start = 10**(n-1)
@@ -18,6 +20,9 @@ def index(request):
 
 @login_required
 def request_meter(request):
+    if request.user.meter:
+        messages.error(request, "sorry you already have a meter")
+        return redirect('/')
     if request.method == 'POST':
         user_form = CustomUserChangeForm(data=request.POST, files=request.FILES)
         if user_form.is_valid():
@@ -65,8 +70,9 @@ def users(request):
         "meters": meters
     })
 
-def power_requests(request):
-    requests = Request.objects.all()
-    return render(request, 'pages/requets.html', {
+def history(request, id):
+    user = get_object_or_404(User, id=id)
+    requests = Request.objects.filter(by=user)
+    return render(request, 'pages/history.html', {
         "requests": requests
     })

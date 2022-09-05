@@ -25,10 +25,17 @@ class Request(models.Model):
     granted = models.BooleanField(default=False)
     date_created = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ("granted",)
+
+    def __str__(self) -> str:
+        return ''.join(f"Request by: {self.by}")
+
     def save(self, *args, **kwargs) -> None:
         # if unique_id
         #self.invoice_id = str(self.supplier.id + unique_id(8))
-        self.by.meter.current_power += self.amount
-        self.by.meter.save()
+        if self.granted:
+            self.by.meter.current_power += self.amount
+            self.by.meter.save()
         super().save(*args, **kwargs)
 
